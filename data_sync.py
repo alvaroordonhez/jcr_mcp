@@ -36,6 +36,7 @@ class DataSyncer:
         # 数据源配置（上游文件命名已统一为 <表名>-UTF8.csv，GJQKYJMD 保留 .csv）
         self.data_sources = {
             # JCR 期刊影响因子
+            "JCR2025": "JCR2025-UTF8.csv",
             "JCR2024": "JCR2024-UTF8.csv",
             "JCR2023": "JCR2023-UTF8.csv",
             "JCR2022": "JCR2022-UTF8.csv",
