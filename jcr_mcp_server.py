@@ -27,41 +27,65 @@ class JournalInfo:
     ccf_level: Optional[str] = None
     year: Optional[str] = None
 
+def _table_year(table_name: str) -> Optional[str]:
+    """从表名中提取年份，规则需与 _parse_journal_info 的分支顺序保持一致
+    （更具体的前缀必须先于通用前缀判断，如 CCFT 先于 CCF）"""
+    if table_name.startswith('XR') and 'Conferences' in table_name:
+        digits = ''.join(ch for ch in table_name if ch.isdigit())
+        return digits or None
+    elif table_name.startswith('XR'):
+        return table_name.replace('XR', '') or None
+    elif table_name.startswith('FQBJCR'):
+        return table_name.replace('FQBJCR', '') or None
+    elif table_name.startswith('JCR'):
+        return table_name.replace('JCR', '') or None
+    elif table_name.startswith('GJQKYJMD'):
+        return table_name.replace('GJQKYJMD', '') or None
+    elif table_name.startswith('CCFT'):
+        return table_name.replace('CCFT', '') or None
+    elif table_name.startswith('CCF'):
+        return table_name.replace('CCF', '') or None
+    return None
+
+
 class JCRDatabase:
     """JCR数据库管理类"""
-    
+
     def __init__(self, db_path: str = DATABASE_PATH):
         self.db_path = db_path
         self.init_database()
-    
+
     def init_database(self):
         """初始化数据库"""
         if not os.path.exists(self.db_path):
             # 如果数据库不存在，创建基本表结构
             conn = sqlite3.connect(self.db_path)
             conn.close()
-    
+
     def search_journal(self, journal_name: str, year: Optional[str] = None) -> List[JournalInfo]:
         """搜索期刊信息"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         results = []
         try:
             # 获取所有表名
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
             tables = [table[0] for table in cursor.fetchall()]
-            
+
             # 在各个表中搜索期刊
             for table in tables:
                 try:
+                    if year is not None and _table_year(table) != year:
+                        continue
+
                     # 检查表结构
                     cursor.execute(f"PRAGMA table_info({table})")
                     columns = [col[1] for col in cursor.fetchall()]
-                    
+
                     if 'Journal' not in columns:
                         continue
-                    
+
                     # 构建查询语句
                     query = f"SELECT * FROM {table} WHERE Journal LIKE ? COLLATE NOCASE"
                     cursor.execute(query, (f"%{journal_name}%",))
