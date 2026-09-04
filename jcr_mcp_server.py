@@ -175,10 +175,28 @@ class JCRDatabase:
                 impact_factor = (_clean(norm.get(f'IF({year})'))
                                  or _clean(row_dict.get('IF'))
                                  or _clean(row_dict.get('Impact Factor')))
-                partition = (_clean(norm.get(f'IFQuartile({year})'))
-                             or _clean(row_dict.get('Quartile'))
-                             or _clean(row_dict.get('分区')))
-                category = _clean(row_dict.get('Category')) or _clean(row_dict.get('类别'))
+
+                categories = []
+                quartiles = []
+                for i in range(1, 10):
+                    c = _clean(norm.get(f'Category_{i}')) or _clean(row_dict.get(f'Category_{i}'))
+                    q = _clean(norm.get(f'IFQuartile({year})_{i}')) or _clean(row_dict.get(f'IF Quartile({year})_{i}'))
+                    if c:
+                        categories.append(c)
+                    if q:
+                        quartiles.append(q)
+
+                if categories:
+                    category = '; '.join(categories)
+                else:
+                    category = _clean(row_dict.get('Category')) or _clean(row_dict.get('类别'))
+
+                if quartiles:
+                    partition = '; '.join(list(dict.fromkeys(quartiles)))
+                else:
+                    partition = (_clean(norm.get(f'IFQuartile({year})'))
+                                 or _clean(row_dict.get('Quartile'))
+                                 or _clean(row_dict.get('分区')))
 
             # 国际期刊预警名单（列名按年份变化：预警等级（YYYY年） / 预警原因YYYY年）
             elif table_name.startswith('GJQKYJMD'):
