@@ -26,3 +26,6 @@ env/
 .idea/
 .DS_Store
 Thumbs.db
+
+# 本地 session log（Claude 和我追溯历次 push 的想法/操作记录，不纳入仓库）
+docs/session-logs/
